@@ -461,3 +461,25 @@ navLinks.forEach(function(link){
     });
 
 });
+/* ==========================================================
+   来場者数カウンター
+========================================================== */
+
+fetch("https://api.countapi.xyz/hit/keiyuki-channel/homepage")
+    .then(function(response){
+
+        return response.json();
+
+    })
+    .then(function(data){
+
+        document.getElementById("visitor-count").textContent =
+            data.value.toLocaleString();
+
+    })
+    .catch(function(){
+
+        document.getElementById("visitor-count").textContent =
+            "取得できません";
+
+    });

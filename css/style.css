@@ -1644,5 +1644,16 @@ section h2::after {
         display:flex;
 
     }
+    #visitorArea{
+
+    margin-top:15px;
+
+    font-size:18px;
+
+    color:gold;
+
+    letter-spacing:1px;
+
+}
 
 }
