@@ -4,7 +4,29 @@
 
    JavaScriptはこのファイルに今後も追記していきます。
 ========================================================== */
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
 
+import {
+    getFirestore,
+    doc,
+    getDoc,
+    setDoc,
+    updateDoc,
+    increment
+} from "https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js";
+
+const firebaseConfig = {
+    apiKey: "AIzaSyCABotf4RdPcT1EM0igf4TrERmCq12Cp1Q",
+    authDomain: "cat-kageyukichanel.firebaseapp.com",
+    projectId: "cat-kageyukichanel",
+    storageBucket: "cat-kageyukichanel.firebasestorage.app",
+    messagingSenderId: "495349176568",
+    appId: "1:495349176568:web:f1b5f959e0f52acc91430d"
+};
+
+const app = initializeApp(firebaseConfig);
+
+const db = getFirestore(app);
 
 /* ==========================================================
    ① 必要なHTML要素を取得する
@@ -461,25 +483,74 @@ navLinks.forEach(function(link){
     });
 
 });
-/* ==========================================================
+/* ==========================================
    来場者数カウンター
-========================================================== */
+========================================== */
 
-fetch("https://api.countapi.xyz/hit/keiyuki-channel/homepage")
-    .then(function(response){
+async function updateVisitorCount() {
 
-        return response.json();
+    const visitorElement =
+        document.getElementById("visitor-count");
 
-    })
-    .then(function(data){
+    try {
 
-        document.getElementById("visitor-count").textContent =
-            data.value.toLocaleString();
+        const counterRef =
+            doc(db, "site", "visitorCounter");
 
-    })
-    .catch(function(){
+        const snapshot =
+            await getDoc(counterRef);
 
-        document.getElementById("visitor-count").textContent =
+        if (!snapshot.exists()) {
+
+            await setDoc(counterRef, {
+
+                count: 0
+
+            });
+
+        }
+
+        const today =
+            new Date().toLocaleDateString();
+
+        const lastVisit =
+            localStorage.getItem("lastVisit");
+
+        if (lastVisit !== today) {
+
+            await updateDoc(counterRef, {
+
+                count: increment(1)
+
+            });
+
+            localStorage.setItem(
+
+                "lastVisit",
+
+                today
+
+            );
+
+        }
+
+        const newSnapshot =
+            await getDoc(counterRef);
+
+        visitorElement.textContent =
+            newSnapshot.data().count.toLocaleString();
+
+    }
+
+    catch (error) {
+
+        console.error(error);
+
+        visitorElement.textContent =
             "取得できません";
 
-    });
+    }
+
+}
+
+updateVisitorCount();
