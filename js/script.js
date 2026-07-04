@@ -562,3 +562,185 @@ async function showCounts() {
 ========================= */
 updateAll();
 showCounts();
+
+/* ==========================================================
+   ③-6 いいねボタン
+========================================================== */
+
+/*
+    いいね数を保存するFirestoreの場所
+*/
+
+const likeRef =
+    doc(db, "site", "likeCounter");
+
+/*
+    ボタンと表示要素を取得
+*/
+
+const likeBtn =
+    document.getElementById("likeBtn");
+
+const likeCountEl =
+    document.getElementById("like-count");
+
+/*
+    このブラウザで既にいいね済みかどうかを
+    localStorageで管理します。
+*/
+
+const LIKE_STORAGE_KEY = "hasLikedKageyuki";
+
+/*
+    現在のいいね数を取得して表示する
+*/
+
+async function showLikeCount() {
+
+    try {
+
+        const snapshot =
+            await getDoc(likeRef);
+
+        if (!snapshot.exists()) {
+
+            await setDoc(likeRef, {
+
+                count: 0
+
+            });
+
+        }
+
+        const newSnapshot =
+            await getDoc(likeRef);
+
+        likeCountEl.textContent =
+            newSnapshot.data()?.count ?? 0;
+
+    }
+
+    catch (error) {
+
+        console.error("like show error:", error);
+
+    }
+
+}
+
+/*
+    ボタンの見た目を
+    「いいね済み」状態にする
+*/
+
+function setLikedAppearance() {
+
+    likeBtn.classList.add("liked");
+
+    document.getElementById("likeIcon").textContent = "♥";
+
+}
+
+/*
+    ボタンの見た目を
+    「未いいね」状態に戻す
+*/
+
+function setUnlikedAppearance() {
+
+    likeBtn.classList.remove("liked");
+
+    document.getElementById("likeIcon").textContent = "♡";
+
+}
+
+/*
+    ページを開いた時点で
+    既にいいね済みかどうか反映する
+*/
+
+if (localStorage.getItem(LIKE_STORAGE_KEY) === "true") {
+
+    setLikedAppearance();
+
+}
+
+/*
+    ボタンを押した時の処理
+*/
+
+likeBtn.addEventListener("click", async function () {
+
+    /*
+        連打で二重送信されないよう
+        一旦ボタンを無効化
+    */
+
+    likeBtn.disabled = true;
+
+    try {
+
+        const alreadyLiked =
+            localStorage.getItem(LIKE_STORAGE_KEY) === "true";
+
+        if (!alreadyLiked) {
+
+            /*
+                いいねする
+            */
+
+            await updateDoc(likeRef, {
+
+                count: increment(1)
+
+            });
+
+            localStorage.setItem(LIKE_STORAGE_KEY, "true");
+
+            setLikedAppearance();
+
+        } else {
+
+            /*
+                いいねを取り消す
+            */
+
+            await updateDoc(likeRef, {
+
+                count: increment(-1)
+
+            });
+
+            localStorage.removeItem(LIKE_STORAGE_KEY);
+
+            setUnlikedAppearance();
+
+        }
+
+        /*
+            最新の数を反映
+        */
+
+        await showLikeCount();
+
+    }
+
+    catch (error) {
+
+        console.error("like click error:", error);
+
+    }
+
+    finally {
+
+        likeBtn.disabled = false;
+
+    }
+
+});
+
+/*
+    初回表示
+*/
+
+showLikeCount();

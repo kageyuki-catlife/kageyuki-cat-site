@@ -487,100 +487,78 @@ navLinks.forEach(function(link){
    来場者数カウンター
 ========================================== */
 
-async function updateVisitorCount() {
-
-    const visitorElement =
-        document.getElementById("visitor-count");
-
-    try {
-
-        const counterRef =
-            doc(db, "site", "visitorCounter");
-
-        const snapshot =
-            await getDoc(counterRef);
-
-        if (!snapshot.exists()) {
-
-            await setDoc(counterRef, {
-
-                count: 0
-
-            });
-
-        }
-
-        const today =
-            new Date().toLocaleDateString();
-
-        const lastVisit =
-            localStorage.getItem("lastVisit");
-
-        if (lastVisit !== today) {
-
-            await updateDoc(counterRef, {
-
-                count: increment(1)
-
-            });
-
-            localStorage.setItem(
-
-                "lastVisit",
-
-                today
-
-            );
-
-        }
-
-        const newSnapshot =
-            await getDoc(counterRef);
-
-        visitorElement.textContent =
-            newSnapshot.data().count.toLocaleString();
-
-    }
-
-    catch (error) {
-
-        console.error(error);
-
-        visitorElement.textContent =
-            "取得できません";
-
-    }
-
-}
+/* =========================
+   日付キー
+========================= */
 const todayKey = new Date()
   .toISOString()
   .split("T")[0]
   .replaceAll("-", "");
 
+/* =========================
+   Firestore参照
+========================= */
+const totalRef = doc(db, "site", "visitorCounter");
 const dailyRef = doc(db, "daily", todayKey);
 
-const counterRef = doc(db, "site", "visitorCounter");
-
+/* =========================
+   カウント処理（重要）
+========================= */
 async function updateAll() {
 
-  // 総訪問者
-  await updateDoc(counterRef, {
-    count: increment(1)
-  });
+    try {
 
-  // 今日の訪問者
-  const snap = await getDoc(dailyRef);
+        // 総訪問者
+        await updateDoc(totalRef, {
+            count: increment(1)
+        });
 
-  if (!snap.exists()) {
-    await setDoc(dailyRef, {
-      count: 0
-    });
-  }
+        // 今日データがなければ作成
+        const snap = await getDoc(dailyRef);
 
-  await updateDoc(dailyRef, {
-    count: increment(1)
-  });
+        if (!snap.exists()) {
+            await setDoc(dailyRef, { count: 0 });
+        }
+
+        // 今日カウント
+        await updateDoc(dailyRef, {
+            count: increment(1)
+        });
+
+    } catch (e) {
+
+        console.error("count error:", e);
+
+    }
 
 }
 
+/* =========================
+   表示処理
+========================= */
+async function showCounts() {
+
+    try {
+
+        const totalSnap = await getDoc(totalRef);
+        const todaySnap = await getDoc(dailyRef);
+
+        document.getElementById("visitor-total").textContent =
+            totalSnap.data()?.count ?? 0;
+
+        document.getElementById("visitor-today").textContent =
+            todaySnap.data()?.count ?? 0;
+
+    } catch (e) {
+
+        console.error("show error:", e);
+
+    }
+
+}
+
+/* =========================
+   実行（ここが重要）
+========================= */
 updateAll();
+showCounts();

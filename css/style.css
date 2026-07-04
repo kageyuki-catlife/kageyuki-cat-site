@@ -613,7 +613,6 @@ section h2 {
 
 }
 
-=========================================================== */
 /* ===========================================================
    ②-3 ギャラリー
 =========================================================== */
@@ -1655,5 +1654,122 @@ section h2::after {
     letter-spacing:1px;
 
 }
+
+}
+/* ===========================================================
+   いいねボタン
+=========================================================== */
+
+#likeArea {
+
+    margin-top: 15px;
+
+}
+
+#likeBtn {
+
+    cursor: pointer;
+
+    border: none;
+
+    background: #333;
+
+    color: white;
+
+    padding: 10px 22px;
+
+    border-radius: 999px;
+
+    font-size: 16px;
+
+    display: inline-flex;
+
+    align-items: center;
+
+    gap: 8px;
+
+    transition: .3s;
+
+}
+
+#likeBtn:hover {
+
+    background: gold;
+
+    color: black;
+
+    transform: scale(1.05);
+
+}
+
+/*
+    ハートアイコン
+*/
+
+#likeIcon {
+
+    font-size: 20px;
+
+    transition: transform .3s;
+
+}
+
+/*
+    押した瞬間の演出
+*/
+
+#likeBtn.liked #likeIcon {
+
+    color: #ff4d6d;
+
+    animation: likePop .4s ease;
+
+}
+
+@keyframes likePop {
+
+    0% {
+        transform: scale(1);
+    }
+
+    40% {
+        transform: scale(1.4);
+    }
+
+    100% {
+        transform: scale(1);
+    }
+
+}
+
+/*
+    押した後のボタン全体の色
+*/
+
+#likeBtn.liked {
+
+    background: #ffe3e9;
+
+    color: #ff4d6d;
+
+}
+
+/*
+    ライトモード対応
+*/
+
+body.light-mode #likeBtn {
+
+    background: #eeeeee;
+
+    color: #222;
+
+}
+
+body.light-mode #likeBtn.liked {
+
+    background: #ffe3e9;
+
+    color: #ff4d6d;
 
 }
