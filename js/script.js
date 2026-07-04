@@ -4,35 +4,29 @@
 
    JavaScriptはこのファイルに今後も追記していきます。
 ========================================================== */
-/* ==========================================================
-   【切り分けテスト用】
-   Firebase関連を一時的にコメントアウトしています。
-   これでフェードイン表示が直るか確認してください。
-========================================================== */
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
 
-// import { initializeApp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
+import {
+    getFirestore,
+    doc,
+    getDoc,
+    setDoc,
+    updateDoc,
+    increment
+} from "https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js";
 
-// import {
-//     getFirestore,
-//     doc,
-//     getDoc,
-//     setDoc,
-//     updateDoc,
-//     increment
-// } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js";
+const firebaseConfig = {
+    apiKey: "AIzaSyCABotf4RdPcT1EM0igf4TrERmCq12Cp1Q",
+    authDomain: "cat-kageyukichanel.firebaseapp.com",
+    projectId: "cat-kageyukichanel",
+    storageBucket: "cat-kageyukichanel.firebasestorage.app",
+    messagingSenderId: "495349176568",
+    appId: "1:495349176568:web:f1b5f959e0f52acc91430d"
+};
 
-// const firebaseConfig = {
-//     apiKey: "AIzaSyCABotf4RdPcT1EM0igf4TrERmCq12Cp1Q",
-//     authDomain: "cat-kageyukichanel.firebaseapp.com",
-//     projectId: "cat-kageyukichanel",
-//     storageBucket: "cat-kageyukichanel.firebasestorage.app",
-//     messagingSenderId: "495349176568",
-//     appId: "1:495349176568:web:f1b5f959e0f52acc91430d"
-// };
+const app = initializeApp(firebaseConfig);
 
-// const app = initializeApp(firebaseConfig);
-
-// const db = getFirestore(app);
+const db = getFirestore(app);
 
 /* ==========================================================
    ① 必要なHTML要素を取得する
@@ -491,103 +485,80 @@ navLinks.forEach(function(link){
 });
 /* ==========================================
    来場者数カウンター
-   【切り分けテスト用】Firestore依存のためコメントアウト
 ========================================== */
 
-// async function updateVisitorCount() {
-//
-//     const visitorElement =
-//         document.getElementById("visitor-count");
-//
-//     try {
-//
-//         const counterRef =
-//             doc(db, "site", "visitorCounter");
-//
-//         const snapshot =
-//             await getDoc(counterRef);
-//
-//         if (!snapshot.exists()) {
-//
-//             await setDoc(counterRef, {
-//
-//                 count: 0
-//
-//             });
-//
-//         }
-//
-//         const today =
-//             new Date().toLocaleDateString();
-//
-//         const lastVisit =
-//             localStorage.getItem("lastVisit");
-//
-//         if (lastVisit !== today) {
-//
-//             await updateDoc(counterRef, {
-//
-//                 count: increment(1)
-//
-//             });
-//
-//             localStorage.setItem(
-//
-//                 "lastVisit",
-//
-//                 today
-//
-//             );
-//
-//         }
-//
-//         const newSnapshot =
-//             await getDoc(counterRef);
-//
-//         visitorElement.textContent =
-//             newSnapshot.data().count.toLocaleString();
-//
-//     }
-//
-//     catch (error) {
-//
-//         console.error(error);
-//
-//         visitorElement.textContent =
-//             "取得できません";
-//
-//     }
-//
-// }
-// const todayKey = new Date()
-//   .toISOString()
-//   .split("T")[0]
-//   .replaceAll("-", "");
-//
-// const dailyRef = doc(db, "daily", todayKey);
-//
-// const counterRef = doc(db, "site", "visitorCounter");
-//
-// async function updateAll() {
-//
-//   // 総訪問者
-//   await updateDoc(counterRef, {
-//     count: increment(1)
-//   });
-//
-//   // 今日の訪問者
-//   const snap = await getDoc(dailyRef);
-//
-//   if (!snap.exists()) {
-//     await setDoc(dailyRef, {
-//       count: 0
-//     });
-//   }
-//
-//   await updateDoc(dailyRef, {
-//     count: increment(1)
-//   });
-//
-// }
-//
-// updateAll();
+/* =========================
+   日付キー
+========================= */
+const todayKey = new Date()
+  .toISOString()
+  .split("T")[0]
+  .replaceAll("-", "");
+
+/* =========================
+   Firestore参照
+========================= */
+const totalRef = doc(db, "site", "visitorCounter");
+const dailyRef = doc(db, "daily", todayKey);
+
+/* =========================
+   カウント処理（重要）
+========================= */
+async function updateAll() {
+
+    try {
+
+        // 総訪問者
+        await updateDoc(totalRef, {
+            count: increment(1)
+        });
+
+        // 今日データがなければ作成
+        const snap = await getDoc(dailyRef);
+
+        if (!snap.exists()) {
+            await setDoc(dailyRef, { count: 0 });
+        }
+
+        // 今日カウント
+        await updateDoc(dailyRef, {
+            count: increment(1)
+        });
+
+    } catch (e) {
+
+        console.error("count error:", e);
+
+    }
+
+}
+
+/* =========================
+   表示処理
+========================= */
+async function showCounts() {
+
+    try {
+
+        const totalSnap = await getDoc(totalRef);
+        const todaySnap = await getDoc(dailyRef);
+
+        document.getElementById("visitor-total").textContent =
+            totalSnap.data()?.count ?? 0;
+
+        document.getElementById("visitor-today").textContent =
+            todaySnap.data()?.count ?? 0;
+
+    } catch (e) {
+
+        console.error("show error:", e);
+
+    }
+
+}
+
+/* =========================
+   実行（ここが重要）
+========================= */
+updateAll();
+showCounts();
