@@ -560,8 +560,12 @@ async function showCounts() {
 /* =========================
    実行（ここが重要）
 ========================= */
-updateAll();
-showCounts();
+async function init() {
+    await updateAll();
+    await showCounts();
+}
+
+init();
 
 /* ==========================================================
    ③-6 いいねボタン
